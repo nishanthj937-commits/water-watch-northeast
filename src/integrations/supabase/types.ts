@@ -14,7 +14,195 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          location: string
+          message: string
+          region_id: string | null
+          severity: Database["public"]["Enums"]["alert_severity"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          location: string
+          message: string
+          region_id?: string | null
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          location?: string
+          message?: string
+          region_id?: string | null
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_reports: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          issue_type: Database["public"]["Enums"]["water_issue_type"]
+          location: string
+          region_id: string | null
+          reporter_name: string | null
+          reporter_phone: string | null
+          status: string
+          symptoms: string | null
+          updated_at: string
+          water_source: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          issue_type?: Database["public"]["Enums"]["water_issue_type"]
+          location: string
+          region_id?: string | null
+          reporter_name?: string | null
+          reporter_phone?: string | null
+          status?: string
+          symptoms?: string | null
+          updated_at?: string
+          water_source: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          issue_type?: Database["public"]["Enums"]["water_issue_type"]
+          location?: string
+          region_id?: string | null
+          reporter_name?: string | null
+          reporter_phone?: string | null
+          status?: string
+          symptoms?: string | null
+          updated_at?: string
+          water_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_reports_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regions: {
+        Row: {
+          coliform_count: number | null
+          created_at: string
+          district: string
+          id: string
+          name: string
+          ph_level: number | null
+          population: number | null
+          risk_level: string | null
+          state: string
+          turbidity: number | null
+          updated_at: string
+          water_sources: number | null
+        }
+        Insert: {
+          coliform_count?: number | null
+          created_at?: string
+          district: string
+          id?: string
+          name: string
+          ph_level?: number | null
+          population?: number | null
+          risk_level?: string | null
+          state: string
+          turbidity?: number | null
+          updated_at?: string
+          water_sources?: number | null
+        }
+        Update: {
+          coliform_count?: number | null
+          created_at?: string
+          district?: string
+          id?: string
+          name?: string
+          ph_level?: number | null
+          population?: number | null
+          risk_level?: string | null
+          state?: string
+          turbidity?: number | null
+          updated_at?: string
+          water_sources?: number | null
+        }
+        Relationships: []
+      }
+      water_quality_readings: {
+        Row: {
+          arsenic_level: number | null
+          coliform_count: number | null
+          created_at: string
+          fluoride_level: number | null
+          id: string
+          is_safe: boolean | null
+          ph_level: number | null
+          recorded_at: string
+          region_id: string
+          turbidity: number | null
+        }
+        Insert: {
+          arsenic_level?: number | null
+          coliform_count?: number | null
+          created_at?: string
+          fluoride_level?: number | null
+          id?: string
+          is_safe?: boolean | null
+          ph_level?: number | null
+          recorded_at?: string
+          region_id: string
+          turbidity?: number | null
+        }
+        Update: {
+          arsenic_level?: number | null
+          coliform_count?: number | null
+          created_at?: string
+          fluoride_level?: number | null
+          id?: string
+          is_safe?: boolean | null
+          ph_level?: number | null
+          recorded_at?: string
+          region_id?: string
+          turbidity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "water_quality_readings_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +211,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      alert_severity: "critical" | "warning" | "info" | "resolved"
+      water_issue_type:
+        | "color"
+        | "odor"
+        | "illness"
+        | "contamination"
+        | "shortage"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +345,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      alert_severity: ["critical", "warning", "info", "resolved"],
+      water_issue_type: [
+        "color",
+        "odor",
+        "illness",
+        "contamination",
+        "shortage",
+        "other",
+      ],
+    },
   },
 } as const
