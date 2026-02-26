@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, MapPin, Droplets, Thermometer } from "lucide-react";
+import { Send, MapPin, Droplets } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const ReportForm = () => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     location: "",
     waterSource: "",
@@ -16,13 +18,32 @@ const ReportForm = () => {
     symptoms: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Report Submitted",
-      description: "Your water quality report has been received. Thank you!",
-    });
-    setFormData({ location: "", waterSource: "", issue: "", description: "", symptoms: "" });
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("incident_reports").insert({
+        location: formData.location,
+        water_source: formData.waterSource,
+        issue_type: formData.issue as "color" | "odor" | "illness" | "contamination" | "shortage" | "other",
+        description: formData.description,
+        symptoms: formData.symptoms || null,
+      });
+      if (error) throw error;
+      toast({
+        title: "Report Submitted",
+        description: "Your water quality report has been received. Thank you!",
+      });
+      setFormData({ location: "", waterSource: "", issue: "", description: "", symptoms: "" });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to submit report",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -92,9 +113,9 @@ const ReportForm = () => {
           />
         </div>
 
-        <Button type="submit" className="w-full gradient-water text-primary-foreground font-semibold">
+        <Button type="submit" className="w-full gradient-water text-primary-foreground font-semibold" disabled={loading}>
           <Send className="h-4 w-4 mr-2" />
-          Submit Report
+          {loading ? "Submitting..." : "Submit Report"}
         </Button>
       </form>
     </motion.div>

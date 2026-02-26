@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Droplets, Activity, AlertTriangle, Users, Shield, Menu, X, Bell } from "lucide-react";
 import StatCard from "@/components/StatCard";
@@ -7,9 +7,30 @@ import { WaterQualityChart, DiseaseChart } from "@/components/HealthCharts";
 import ReportForm from "@/components/ReportForm";
 import EducationPanel from "@/components/EducationPanel";
 import RegionTable from "@/components/RegionTable";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [stats, setStats] = useState({ sources: 0, alerts: 0, criticalAlerts: 0, reports: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [regionsRes, alertsRes, reportsRes] = await Promise.all([
+        supabase.from("regions").select("water_sources"),
+        supabase.from("alerts").select("severity").eq("is_active", true),
+        supabase.from("incident_reports").select("id", { count: "exact", head: true }),
+      ]);
+      const totalSources = (regionsRes.data || []).reduce((sum, r) => sum + (r.water_sources || 0), 0);
+      const activeAlerts = alertsRes.data || [];
+      setStats({
+        sources: totalSources,
+        alerts: activeAlerts.length,
+        criticalAlerts: activeAlerts.filter((a) => a.severity === "critical").length,
+        reports: reportsRes.count || 0,
+      });
+    };
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +69,9 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <button className="relative p-2 rounded-lg hover:bg-muted transition-colors">
               <Bell className="h-5 w-5 text-muted-foreground" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-status-danger animate-pulse-gentle" />
+              {stats.criticalAlerts > 0 && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-status-danger animate-pulse-gentle" />
+              )}
             </button>
             <button
               className="md:hidden p-2 rounded-lg hover:bg-muted"
@@ -100,9 +123,6 @@ const Index = () => {
                 <span className="h-1.5 w-1.5 rounded-full bg-status-safe animate-pulse-gentle" />
                 Live Monitoring
               </span>
-              <span className="text-xs text-primary-foreground/70">
-                Last updated: 3 min ago
-              </span>
             </div>
           </motion.div>
         </div>
@@ -114,32 +134,32 @@ const Index = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             title="Water Sources Monitored"
-            value="1,247"
-            change="+12 this week"
+            value={stats.sources.toLocaleString()}
+            change="Live from database"
             trend="up"
             icon={<Droplets className="h-5 w-5" />}
             status="info"
           />
           <StatCard
-            title="Active Disease Cases"
-            value="47"
-            change="-8 from last week"
-            trend="down"
+            title="Incident Reports"
+            value={stats.reports}
+            change="Community submitted"
+            trend="up"
             icon={<Activity className="h-5 w-5" />}
             status="warning"
           />
           <StatCard
             title="Active Alerts"
-            value="6"
-            change="2 critical"
+            value={stats.alerts}
+            change={`${stats.criticalAlerts} critical`}
             trend="up"
             icon={<AlertTriangle className="h-5 w-5" />}
             status="danger"
           />
           <StatCard
-            title="Health Workers Active"
-            value="184"
-            change="92% coverage"
+            title="Regions Covered"
+            value="8"
+            change="NE India states"
             trend="up"
             icon={<Users className="h-5 w-5" />}
             status="safe"
@@ -173,7 +193,7 @@ const Index = () => {
               <Shield className="h-4 w-4 text-primary" />
               <span>JalRaksha EWS — Smart Community Health Monitoring</span>
             </div>
-            <p>Designed for Rural Northeast India · Data is illustrative</p>
+            <p>Designed for Rural Northeast India · Powered by Lovable Cloud</p>
           </div>
         </div>
       </footer>
